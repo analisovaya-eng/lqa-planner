@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LQA-трекер маркетплейса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #2B1F38;
+    --paper: #FFFFFF;
+    --paper-dim: #F3ECFA;
+    --bg: #F6F1FB;
+    --bg-2: #EADCF6;
+    --accent: #9B2FC2;
+    --accent-2: #C21F8D;
+    --amber: #B4801F;
+    --green: #3F6B4C;
+    --noaccess: #B23A24;
+    --grey: #948BA6;
+    --line: #E1D3EF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 480px at 12% -10%, rgba(194,31,141,0.08), transparent 60%),
+      radial-gradient(900px 460px at 100% 0%, rgba(155,47,194,0.08), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:1000px;
+    margin:0 auto;
+    padding:52px 24px 90px;
+  }
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:32px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .titleblock{max-width:52ch;}
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:var(--accent-2);
+    letter-spacing:0.02em;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow svg{width:14px;height:14px;}
+  h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:34px;
+    line-height:1.15;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+  .sub{
+    color:#6B5F7D;
+    font-size:14.5px;
+    line-height:1.6;
+  }
+
+  .score{
+    text-align:right;
+    flex:none;
+  }
+  .score .num{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:56px;
+    line-height:1;
+    background:linear-gradient(120deg, var(--accent), var(--accent-2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .score .num span{font-size:24px;color:#8E82A4;font-weight:400;-webkit-text-fill-color:#8E82A4;}
+  .score .cap{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:#6B5F7D;
+    letter-spacing:0.03em;
+    margin-top:4px;
+  }
+
+  .progress-track{
+    height:5px;
+    background:#E1D3EF;
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:10px;
+    display:flex;
+  }
+  .progress-track .seg{height:100%;}
+  .seg-done{background:linear-gradient(90deg, var(--accent), var(--accent-2));}
+  .seg-progress{background:var(--amber);}
+
+  .counts{
+    display:flex;
+    gap:20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color:#6B5F7D;
+    margin-bottom:34px;
+  }
+  .counts span{display:inline-flex;align-items:center;gap:6px;}
+  .counts .dot{width:7px;height:7px;border-radius:50%;}
+
+  .platform-links{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .platform-links a{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--ink);
+    text-decoration:none;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:6px 14px;
+    transition:border-color 0.15s ease, transform 0.12s ease;
+  }
+  .platform-links a:hover{
+    border-color:var(--accent);
+    transform:translateY(-1px);
+  }
+
+  .board{
+    background:var(--paper);
+    border-radius:6px;
+    box-shadow: 0 20px 46px -24px rgba(93,45,120,0.28);
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    color:var(--ink);
+  }
+  thead th{
+    background:var(--bg-2);
+    color:#4A3960;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:500;
+    font-size:11.5px;
+    letter-spacing:0.04em;
+    text-align:left;
+    padding:13px 16px;
+  }
+  thead th.lang-col{width:180px;}
+  tbody tr{border-bottom:1px solid var(--line);}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:rgba(155,47,194,0.03);}
+  td{padding:0;vertical-align:top;}
+  td.lang-cell{
+    padding:18px 16px;
+    font-family:'Source Serif 4', serif;
+    font-size:18px;
+    font-weight:600;
+    background:var(--paper-dim);
+    border-right:1px solid var(--line);
+  }
+  .cell{
+    padding:14px 16px;
+    border-right:1px solid var(--line);
+    min-height:86px;
+  }
+  tbody td:last-child.cell{border-right:none;}
+
+  .status-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    border:1px solid transparent;
+    background:rgba(148,139,166,0.12);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    letter-spacing:0.02em;
+    cursor:pointer;
+    padding:5px 10px 5px 8px;
+    border-radius:20px;
+    color:var(--ink);
+    transition:transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .status-btn:hover{transform:translateY(-1px);}
+  .status-btn:active{transform:translateY(0);}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none;}
+  .status-btn.not_started{background:rgba(148,139,166,0.12);border-color:rgba(148,139,166,0.3);}
+  .status-btn.not_started .dot{background:var(--grey);}
+  .status-btn.in_progress{background:rgba(180,128,31,0.12);border-color:rgba(180,128,31,0.35);}
+  .status-btn.in_progress .dot{background:var(--amber);}
+  .status-btn.done{background:rgba(155,47,194,0.10);border-color:rgba(155,47,194,0.35);}
+  .status-btn.done .dot{background:linear-gradient(90deg, var(--accent), var(--accent-2));}
+  .status-btn.no_phone{background:rgba(178,58,36,0.09);border-color:rgba(178,58,36,0.3);}
+  .status-btn.no_phone .dot{background:var(--noaccess);}
+
+  .meta{margin-top:12px;}
+  .field{margin-top:10px;}
+  .field:first-child{margin-top:0;}
+  .field-label{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9.5px;
+    letter-spacing:0.07em;
+    color:var(--grey);
+    margin-bottom:3px;
+  }
+  .meta input, .meta textarea{
+    width:100%;
+    border:none;
+    border-bottom:1px solid transparent;
+    background:transparent;
+    padding:1px 0;
+    resize:none;
+    transition:border-color 0.15s ease;
+  }
+  .meta input{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink);
+  }
+  .meta textarea{
+    font-family:'Source Serif 4', serif;
+    font-style:italic;
+    font-size:12.5px;
+    color:#6B5F7D;
+    min-height:30px;
+  }
+  .meta input::placeholder, .meta textarea::placeholder{color:#B8AECB;font-style:normal;}
+  .meta input:focus, .meta textarea:focus{
+    outline:none;
+    border-bottom:1px solid var(--accent);
+  }
+
+  footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:18px;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .legend{
+    display:flex;
+    gap:22px;
+    flex-wrap:wrap;
+    font-size:12px;
+    color:#6B5F7D;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .legend .dot{width:7px;height:7px;}
+
+  .savenote{
+    font-size:11px;
+    color:#8E82A4;
+    font-family:'IBM Plex Mono', monospace;
+    min-height:14px;
+  }
+
+  .notes-section{
+    margin-top:44px;
+  }
+  .notes-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:12px;
+    gap:12px;
+  }
+  .notes-title{
+    font-family:'Source Serif 4', serif;
+    font-weight:600;
+    font-size:19px;
+    display:flex;
+    align-items:center;
+    gap:9px;
+    color:var(--ink);
+  }
+  .notes-title .pin{
+    width:9px;height:9px;border-radius:50%;
+    background:linear-gradient(135deg, var(--accent), var(--accent-2));
+    flex:none;
+  }
+  .notes-hint{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color:#8E82A4;
+  }
+  .notes-card{
+    background:var(--paper);
+    border-radius:6px;
+    box-shadow: 0 20px 46px -26px rgba(93,45,120,0.28);
+    border:1px solid var(--line);
+    padding:20px 22px;
+    position:relative;
+    overflow:hidden;
+  }
+  .notes-card::before{
+    content:"";
+    position:absolute;
+    top:0; left:0; bottom:0;
+    width:4px;
+    background:linear-gradient(180deg, var(--accent), var(--accent-2));
+  }
+  #notesArea{
+    width:100%;
+    min-height:150px;
+    border:none;
+    background:transparent;
+    resize:vertical;
+    font-family:'Source Serif 4', serif;
+    font-size:15px;
+    line-height:1.65;
+    color:var(--ink);
+    padding-left:8px;
+  }
+  #notesArea:focus{outline:none;}
+  #notesArea::placeholder{color:#B8AECB;font-style:italic;}
+
+  @media (max-width:640px){
+    .score .num{font-size:40px;}
+    thead th.lang-col{width:120px;}
+    td.lang-cell{font-size:15px;padding:14px 10px;}
+    .cell{padding:12px 10px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="titleblock">
+      <h1>Проверка маркетплейса</h1>
+    </div>
+    <div class="score">
+      <div class="num" id="scoreNum">0<span>/15</span></div>
+      <div class="cap">ЯЧЕЕК ЗАКРЫТО</div>
+    </div>
+  </header>
+
+  <div class="platform-links" id="platformLinks">
+    <a href="https://analisovaya-eng.github.io/lqa-marketplace-web/" target="_blank" rel="noopener">🌐 Web</a>
+    <a href="https://analisovaya-eng.github.io/lqa-marketplace-android/" target="_blank" rel="noopener">🤖 Android</a>
+    <a href="https://analisovaya-eng.github.io/lqa-marketplace-ios/" target="_blank" rel="noopener">🍎 iOS</a>
+  </div>
+
+  <div class="progress-track" id="progressTrack"></div>
+  <div class="counts" id="counts"></div>
+
+  <div class="board">
+    <table>
+      <thead>
+        <tr>
+          <th class="lang-col">Язык</th>
+          <th>Web</th>
+          <th>Android</th>
+          <th>iOS</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--grey)"></span>не начато</span>
+      <span><span class="dot" style="background:var(--amber)"></span>в работе</span>
+      <span><span class="dot" style="background:linear-gradient(90deg, var(--accent), var(--accent-2))"></span>готово</span>
+      <span><span class="dot" style="background:var(--noaccess)"></span>нет телефончика (Android/iOS)</span>
+    </div>
+    <div class="savenote" id="savenote"></div>
+  </footer>
+
+  <div class="notes-section">
+    <div class="notes-head">
+      <div class="notes-title"><span class="pin"></span>Заметки менеджера</div>
+      <div class="notes-hint">сохраняются автоматически</div>
+    </div>
+    <div class="notes-card">
+      <textarea id="notesArea" placeholder=""></textarea>
+    </div>
+  </div>
+</div>
+
+<script>
+const LANGS = ["Армянский", "Таджикский", "Узбекский", "Грузинский", "Казахский"];
+const PLATFORMS = ["web", "android", "ios"];
+const STATUS_CYCLES = {
+  web: ["not_started", "in_progress", "done"],
+  android: ["not_started", "in_progress", "done", "no_phone"],
+  ios: ["not_started", "in_progress", "done", "no_phone"]
+};
+const STATUS_LABEL = {
+  not_started: "не начато",
+  in_progress: "в работе",
+  done: "готово",
+  no_phone: "нет телефончика"
+};
+// вставьте сюда URL вашего Apps Script веб-приложения (заканчивается на /exec)
+const APPS_SCRIPT_URL = "ВАШ_URL_ЗДЕСЬ";
+
+let state = { notes: "" };
+LANGS.forEach(lang => {
+  state[lang] = {};
+  PLATFORMS.forEach(p => {
+    state[lang][p] = { status: "not_started", assignee: "", note: "" };
+  });
+});
+
+async function loadState(){
+  const note = document.getElementById('savenote');
+  try{
+    const res = await fetch(APPS_SCRIPT_URL);
+    const saved = await res.json();
+    LANGS.forEach(lang => {
+      PLATFORMS.forEach(p => {
+        if(saved[lang] && saved[lang][p]){
+          state[lang][p] = Object.assign(state[lang][p], saved[lang][p]);
+        }
+      });
+    });
+    if(typeof saved.notes === "string"){
+      state.notes = saved.notes;
+    }
+  }catch(e){
+    note.textContent = "не удалось загрузить данные — проверьте APPS_SCRIPT_URL";
+  }
+  document.getElementById('notesArea').value = state.notes;
+  render();
+}
+
+let saveTimer = null;
+async function saveState(){
+  const note = document.getElementById('savenote');
+  try{
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(state)
+    });
+    note.textContent = "сохранено · " + new Date().toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'});
+  }catch(e){
+    note.textContent = "не удалось сохранить, попробуйте ещё раз";
+  }
+}
+function queueSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveState, 500);
+}
+
+function cycleStatus(lang, p){
+  const cycle = STATUS_CYCLES[p];
+  const cur = state[lang][p].status;
+  const idx = cycle.indexOf(cur);
+  state[lang][p].status = cycle[(idx + 1) % cycle.length];
+  render();
+  queueSave();
+}
+
+function updateSummary(){
+  const counts = { not_started: 0, in_progress: 0, done: 0, no_phone: 0 };
+  LANGS.forEach(lang => PLATFORMS.forEach(p => counts[state[lang][p].status]++));
+  const total = LANGS.length * PLATFORMS.length;
+
+  document.getElementById('scoreNum').innerHTML = counts.done + '<span>/' + total + '</span>';
+
+  const track = document.getElementById('progressTrack');
+  const donePct = (counts.done / total * 100).toFixed(1);
+  const progPct = (counts.in_progress / total * 100).toFixed(1);
+  track.innerHTML = `
+    <div class="seg seg-done" style="width:${donePct}%"></div>
+    <div class="seg seg-progress" style="width:${progPct}%"></div>
+  `;
+
+  const el = document.getElementById('counts');
+  el.innerHTML = `
+    <span><span class="dot" style="background:linear-gradient(90deg, var(--accent), var(--accent-2))"></span>${counts.done} готово</span>
+    <span><span class="dot" style="background:var(--amber)"></span>${counts.in_progress} в работе</span>
+    <span><span class="dot" style="background:var(--grey)"></span>${counts.not_started} не начато</span>
+  `;
+}
+
+function render(){
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = "";
+  LANGS.forEach(lang => {
+    const tr = document.createElement('tr');
+    const langTd = document.createElement('td');
+    langTd.className = "lang-cell";
+    langTd.textContent = lang;
+    tr.appendChild(langTd);
+
+    PLATFORMS.forEach(p => {
+      const td = document.createElement('td');
+      td.className = "cell";
+      const cellState = state[lang][p];
+
+      const btn = document.createElement('button');
+      btn.className = "status-btn " + cellState.status;
+      btn.innerHTML = `<span class="dot"></span>${STATUS_LABEL[cellState.status]}`;
+      btn.onclick = () => cycleStatus(lang, p);
+      td.appendChild(btn);
+
+      const meta = document.createElement('div');
+      meta.className = "meta";
+
+      const assigneeField = document.createElement('div');
+      assigneeField.className = "field";
+      const assigneeLabel = document.createElement('label');
+      assigneeLabel.className = "field-label";
+      assigneeLabel.textContent = "исполнитель";
+      const assigneeInput = document.createElement('input');
+      assigneeInput.type = "text";
+      assigneeInput.placeholder = "имя";
+      assigneeInput.value = cellState.assignee;
+      assigneeInput.oninput = (e) => { state[lang][p].assignee = e.target.value; queueSave(); };
+      assigneeField.appendChild(assigneeLabel);
+      assigneeField.appendChild(assigneeInput);
+      meta.appendChild(assigneeField);
+
+      const noteField = document.createElement('div');
+      noteField.className = "field";
+      const noteLabel = document.createElement('label');
+      noteLabel.className = "field-label";
+      noteLabel.textContent = "заметка";
+      const noteInput = document.createElement('textarea');
+      noteInput.placeholder = "комментарий";
+      noteInput.value = cellState.note;
+      noteInput.oninput = (e) => { state[lang][p].note = e.target.value; queueSave(); };
+      noteField.appendChild(noteLabel);
+      noteField.appendChild(noteInput);
+      meta.appendChild(noteField);
+
+      td.appendChild(meta);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+  updateSummary();
+}
+
+document.getElementById('notesArea').addEventListener('input', (e) => {
+  state.notes = e.target.value;
+  queueSave();
+});
+
+loadState();
+</script>
+</body>
+</html>
