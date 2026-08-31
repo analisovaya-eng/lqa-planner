@@ -312,7 +312,7 @@
     border-radius:6px;
     box-shadow: 0 20px 46px -26px rgba(93,45,120,0.28);
     border:1px solid var(--line);
-    padding:20px 22px;
+    padding:14px 22px 20px;
     position:relative;
     overflow:hidden;
   }
@@ -323,12 +323,39 @@
     width:4px;
     background:linear-gradient(180deg, var(--accent), var(--accent-2));
   }
+  .notes-toolbar{
+    display:flex;
+    gap:4px;
+    padding-left:8px;
+    padding-bottom:10px;
+    margin-bottom:10px;
+    border-bottom:1px solid var(--line);
+  }
+  .notes-toolbar button{
+    width:30px;
+    height:30px;
+    border:1px solid transparent;
+    background:transparent;
+    border-radius:5px;
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    transition:background 0.12s ease;
+  }
+  .notes-toolbar button:hover{background:var(--paper-dim);}
+  .notes-toolbar button.b{font-weight:700;}
+  .notes-toolbar button.i{font-style:italic;font-family:'Source Serif 4', serif;}
+  .notes-toolbar button.u{text-decoration:underline;}
+  .notes-toolbar .sep{width:1px;background:var(--line);margin:4px 4px;}
   #notesArea{
     width:100%;
     min-height:150px;
     border:none;
     background:transparent;
-    resize:vertical;
     font-family:'Source Serif 4', serif;
     font-size:15px;
     line-height:1.65;
@@ -336,7 +363,12 @@
     padding-left:8px;
   }
   #notesArea:focus{outline:none;}
-  #notesArea::placeholder{color:#B8AECB;font-style:italic;}
+  #notesArea:empty::before{
+    content:attr(data-placeholder);
+    color:#B8AECB;
+    font-style:italic;
+  }
+  #notesArea ul{margin:6px 0;padding-left:22px;}
 
   @media (max-width:640px){
     .score .num{font-size:40px;}
@@ -397,7 +429,14 @@
       <div class="notes-hint">сохраняются автоматически</div>
     </div>
     <div class="notes-card">
-      <textarea id="notesArea" placeholder=""></textarea>
+      <div class="notes-toolbar">
+        <button type="button" class="b" data-cmd="bold" title="Жирный">B</button>
+        <button type="button" class="i" data-cmd="italic" title="Курсив">I</button>
+        <button type="button" class="u" data-cmd="underline" title="Подчёркнутый">U</button>
+        <div class="sep"></div>
+        <button type="button" data-cmd="insertUnorderedList" title="Список">•</button>
+      </div>
+      <div id="notesArea" contenteditable="true" data-placeholder=""></div>
     </div>
   </div>
 </div>
@@ -417,7 +456,7 @@ const STATUS_LABEL = {
   no_phone: "нет телефончика"
 };
 // вставьте сюда URL вашего Apps Script веб-приложения (заканчивается на /exec)
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyGHR-YSA3NWw_uPQ_fw94QrRDmspjOWD-3-vVoEapfA94R6iaeBaCqGb0Q9NjYugpu/exec";
+const APPS_SCRIPT_URL = "ВАШ_URL_ЗДЕСЬ";
 
 let state = { notes: "" };
 LANGS.forEach(lang => {
@@ -445,7 +484,7 @@ async function loadState(){
   }catch(e){
     note.textContent = "не удалось загрузить данные — проверьте APPS_SCRIPT_URL";
   }
-  document.getElementById('notesArea').value = state.notes;
+  document.getElementById('notesArea').innerHTML = state.notes;
   render();
 }
 
@@ -561,8 +600,18 @@ function render(){
 }
 
 document.getElementById('notesArea').addEventListener('input', (e) => {
-  state.notes = e.target.value;
+  state.notes = e.target.innerHTML;
   queueSave();
+});
+
+document.querySelectorAll('.notes-toolbar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.execCommand(btn.dataset.cmd, false, null);
+    const area = document.getElementById('notesArea');
+    area.focus();
+    state.notes = area.innerHTML;
+    queueSave();
+  });
 });
 
 loadState();
